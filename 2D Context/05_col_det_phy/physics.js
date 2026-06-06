@@ -86,9 +86,10 @@ function calculateColPhysics(obj1, obj2) {
         return;
     }
     
+    let impulse = 2 * speed / (obj1.mass + obj2.mass)
     // Apply the calculated velocity to bounce objects apart
-    obj1.vx -= (speed * vCollisionNorm.x);
-    obj1.vy -= (speed * vCollisionNorm.y);
-    obj2.vx += (speed * vCollisionNorm.x);
-    obj2.vy += (speed * vCollisionNorm.y);
+    obj1.vx -= (impulse * obj2.mass * vCollisionNorm.x);
+    obj1.vy -= (impulse * obj2.mass * vCollisionNorm.y);
+    obj2.vx += (impulse * obj1.mass * vCollisionNorm.x);
+    obj2.vy += (impulse * obj1.mass * vCollisionNorm.y);
 }

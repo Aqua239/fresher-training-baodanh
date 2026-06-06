@@ -1,13 +1,14 @@
 class Circle extends GameObject
 {
-    constructor (context, x, y, vx, vy)
+    constructor (context, x, y, radius, vx, vy, density = 1)
     {
-        super(context, x, y, vx, vy);
-        // Set default radius, start angle, end angle
+        // Calculate mass
+        let area = Math.PI * radius * radius;
+        let calMass = density * area;
+        super(context, x, y, vx, vy, calMass);
+        // Set default
         this.type = 'circle';
-        this.radius = 25;
-        this.startAngle = 0;
-        this.endAngle = 2 * Math.PI;
+        this.radius = radius;
     }
 
     draw()
@@ -15,7 +16,7 @@ class Circle extends GameObject
         //Draw a simple circle
         this.context.fillStyle = this.isColliding ?  '#ff8080' : '#0099b0';
         this.context.beginPath();
-        this.context.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle);
+        this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         this.context.fill();
     }
 

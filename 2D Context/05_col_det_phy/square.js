@@ -1,13 +1,15 @@
 class Square extends GameObject
 {
-    constructor (context, x, y, vx, vy)
+    constructor (context, x, y, width, height, vx, vy, density = 1)
     {
-        super(context, x, y, vx, vy);
-        // Set default width and height
+        // Calculate mass
+        let area = width * height
+        let calMass = density * area;
+        super(context, x, y, vx, vy, calMass);
+        // Set default
         this.type = 'square';
-        this.width = 50;
-        this.height = 50;
-        
+        this.width = width;
+        this.height = height;
     }
 
     draw()
