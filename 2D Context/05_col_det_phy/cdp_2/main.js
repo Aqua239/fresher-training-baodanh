@@ -1,6 +1,8 @@
 let secondsPassed = 0;
 let oldTimeStamp = 0;
 let gameObjects = [];
+const PIXELS_PER_METER = 1;
+const GRAVITY = 9.81 * PIXELS_PER_METER;
 
 // Init
 let canvas;
@@ -72,7 +74,7 @@ function gameLoop(timeStamp)
 
     for (let i = 0; i < gameObjects.length; i++) 
     {
-        gameObjects[i].update(secondsPassed);
+        gameObjects[i].update(secondsPassed, GRAVITY);
     }
 
     clearCanvas();

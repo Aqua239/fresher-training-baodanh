@@ -28,8 +28,11 @@ class Square extends GameObject
         this.context.stroke();
     }
 
-    update(secondsPassed)
+    update(secondsPassed, gravity)
     {
+        // Apply acceleration
+        this.vy += gravity * secondsPassed;
+        
         // Move with set velocity
         this.x += this.vx * secondsPassed;
         this.y += this.vy * secondsPassed;

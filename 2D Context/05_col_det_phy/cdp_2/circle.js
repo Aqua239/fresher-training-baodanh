@@ -26,13 +26,16 @@ class Circle extends GameObject
         this.context.stroke();
     }
 
-    update(secondsPassed)
+    update(secondsPassed, gravity)
     {
         // Calculate the angle (vy before vx)
         let radians = Math.atan2(this.vy, this.vx);
 
         // Convert to degrees
         let degrees = 180 * radians / Math.PI;
+
+        // Apply acceleration
+        this.vy += gravity * secondsPassed;
 
         // Move with set velocity
         this.x += this.vx * secondsPassed;
