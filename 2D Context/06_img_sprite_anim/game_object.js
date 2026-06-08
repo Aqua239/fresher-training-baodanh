@@ -11,5 +11,6 @@ class GameObject
 
         this.restitution = 0.8;
         this.isColliding = false;
+        this.angle = 0;
     }
 }

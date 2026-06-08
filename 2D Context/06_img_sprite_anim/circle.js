@@ -45,8 +45,15 @@ class Circle extends GameObject
         let column = this.currentFrame % Circle.numColumns;
         let row = Math.floor(this.currentFrame / Circle.numColumns);
 
+        // Set the origin to the center of the circle, rotate the context, move the origin back
+        this.context.translate(this.x, this.y);
+        this.context.rotate(Math.PI / 180 * (this.angle + 90));
+        this.context.translate(-this.x, -this.y);
+
         this.context.drawImage(Circle.sprite, column * Circle.frameWidth, row * Circle.frameHeight, Circle.frameWidth, Circle.frameHeight, (this.x - this.radius), (this.y - this.radius) - this.radius * 0.4, this.radius * 2, this.radius * 2.42);
-    
+        
+        this.context.setTransform(1, 0, 0, 1, 0, 0);
+
         this.context.beginPath();
         this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         this.context.stroke();
@@ -63,7 +70,7 @@ class Circle extends GameObject
         let radians = Math.atan2(this.vy, this.vx);
 
         // Convert to degrees
-        let degrees = 180 * radians / Math.PI;
+        this.angle = 180 * radians / Math.PI;
 
         // Apply acceleration
         this.vy += GRAVITY * secondsPassed;

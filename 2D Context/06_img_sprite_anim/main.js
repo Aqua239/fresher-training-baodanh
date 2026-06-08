@@ -58,6 +58,8 @@ function draw_ex2() {
 
 function createWorldCircle(){
     gameObjects = [    
+    
+    // --- Small (r = 10) ---
     new Circle(context, 100, 75, 10, 10, 30, 1),
     new Circle(context, 400, 50, 10, 0, 50, 1),
     new Circle(context, 700, 75, 10, -40, 30, 1),
@@ -68,6 +70,20 @@ function createWorldCircle(){
     new Circle(context, 700, 525, 10, -40, -30, 1),
     new Circle(context, 250, 150, 10, 35, 35, 1),
     new Circle(context, 550, 450, 10, -35, -35, 1),
+
+    // --- Medium (r = 20) ---
+    new Circle(context, 200, 100, 20, 20, 20, 1),
+    new Circle(context, 800, 150, 20, -20, 40, 1),
+    new Circle(context, 300, 600, 20, 30, -20, 1),
+    new Circle(context, 600, 250, 20, -15, 15, 1),
+    new Circle(context, 850, 500, 20, -25, -25, 1),
+
+    // --- Large (r = 30) ---
+    new Circle(context, 500, 350, 30, 0, 0, 1),    
+    new Circle(context, 150, 250, 30, 15, -15, 1),
+    new Circle(context, 750, 100, 30, -10, 10, 1),
+    new Circle(context, 250, 500, 30, 10, -20, 1),
+    new Circle(context, 650, 600, 30, -30, -10, 1),
     ];
 }
 
