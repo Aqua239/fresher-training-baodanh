@@ -1,3 +1,7 @@
+const FRICTION = 0.98;
+const PIXELS_PER_METER = 10;
+const GRAVITY = 9.81 * PIXELS_PER_METER;
+
 function detectCollisions(objects) {
     let obj1;
     let obj2;
@@ -81,6 +85,8 @@ function calculateColPhysics(obj1, obj2) {
     // Calculate the collision speed using dot product
     let speed = vRelativeVelocity.x * vCollisionNorm.x + vRelativeVelocity.y * vCollisionNorm.y;
     
+    speed *= Math.min(obj1.restitution, obj2.restitution);
+
     // Guard Clause: If objects are moving apart, ignore the collision
     if (speed < 0) {
         return;
@@ -92,4 +98,54 @@ function calculateColPhysics(obj1, obj2) {
     obj1.vy -= (impulse * obj2.mass * vCollisionNorm.y);
     obj2.vx += (impulse * obj1.mass * vCollisionNorm.x);
     obj2.vy += (impulse * obj1.mass * vCollisionNorm.y);
+}
+
+function detectEdgeCollisions(objects, canvasWidth, canvasHeight) {
+    let obj;
+
+    for(let i = 0; i < objects.length; i++) {
+        obj = objects[i];
+        if(obj.type === "circle") {
+            if(obj.x < obj.radius) {
+            obj.vx = Math.abs(obj.vx) * obj.restitution;
+            obj.x = obj.radius;
+            }
+            else if (obj.x > canvasWidth - obj.radius) {
+                obj.vx = -Math.abs(obj.vx) * obj.restitution;
+                obj.x = canvasWidth - obj.radius;
+            }
+
+            if(obj.y < obj.radius) {
+                obj.vy = Math.abs(obj.vy) * obj.restitution;
+                obj.y = obj.radius;
+            }
+            else if (obj.y > canvasHeight - obj.radius) {
+                obj.vy = -Math.abs(obj.vy) * obj.restitution;
+                obj.y = canvasHeight - obj.radius;
+                obj.vx = obj.vx * FRICTION;
+            }
+        }
+        else if (obj.type === 'square') {
+            let centerX = obj.x + obj.width/2;
+            let centerY = obj.y + obj.height/2;
+
+            if(centerX < (obj.width/2)) {
+                obj.vx = Math.abs(obj.vx) * obj.restitution;
+                obj.x = 0;
+            }
+            else if (centerX > canvasWidth - (obj.width/2)) {
+                obj.vx = -Math.abs(obj.vx) * obj.restitution;
+                obj.x = canvasWidth - obj.width;
+            }
+
+            if(centerY < (obj.height/2)) {
+                obj.vy = Math.abs(obj.vy) * obj.restitution;
+                obj.y = 0;
+            }
+            else if (centerY > canvasHeight - (obj.height/2)) {
+                obj.vy = -Math.abs(obj.vy) * obj.restitution;
+                obj.y = canvasHeight - obj.height;
+            }
+        }
+    }
 }

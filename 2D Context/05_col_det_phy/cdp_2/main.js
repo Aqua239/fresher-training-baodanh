@@ -1,8 +1,8 @@
 let secondsPassed = 0;
 let oldTimeStamp = 0;
 let gameObjects = [];
-const PIXELS_PER_METER = 1;
-const GRAVITY = 9.81 * PIXELS_PER_METER;
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 700;
 
 // Init
 let canvas;
@@ -37,6 +37,22 @@ function createWorldSquare()
 
 function createWorldCircle(){
     gameObjects = [    
+    new Circle(context, 100, 75, 10, 10, 30, 1),
+    new Circle(context, 400, 50, 10, 0, 50, 1),
+    new Circle(context, 700, 75, 10, -40, 30, 1),
+    new Circle(context, 50, 300, 10, 50, 0, 1),
+    new Circle(context, 750, 300, 10, -50, 0, 1),
+    new Circle(context, 100, 525, 10, 40, -30, 1),
+    new Circle(context, 400, 550, 10, 0, -50, 1),
+    new Circle(context, 700, 525, 10, -40, -30, 1),
+    new Circle(context, 250, 150, 10, 35, 35, 1),
+    new Circle(context, 550, 450, 10, -35, -35, 1),
+    ];
+}
+
+function createWorldSC()
+{
+    gameObjects = [    
     new Circle(context, 100, 75, 10, 40, 30, 1),
     new Circle(context, 400, 50, 25, 0, 50, 1),
     new Circle(context, 700, 75, 10, -40, 30, 1),
@@ -55,30 +71,21 @@ function createWorldCircle(){
     ];
 }
 
-function createWorldSC()
-{
-    gameObjects = [
-    new Square(context, 250, 50, 50, 50, 0, 50, 1),
-    new Square(context, 250, 300, 50, 50, 0, -50, 1),
-    new Square(context, 150, 0, 50, 50, 50, 50, 1),
-    new Circle(context, 250, 150, 25, 50, 50, 1),
-    new Circle(context, 350, 75, 25, -50, 50, 1),
-    new Circle(context, 300, 300, 25, 50, -50, 1)
-    ];
-}
-
 function gameLoop(timeStamp)
 {
     secondsPassed = (timeStamp - oldTimeStamp) / 1000;
     oldTimeStamp = timeStamp;
 
+    secondsPassed =  Math.min(secondsPassed, 0.1);
+
     for (let i = 0; i < gameObjects.length; i++) 
     {
-        gameObjects[i].update(secondsPassed, GRAVITY);
+        gameObjects[i].update(secondsPassed);
     }
 
     clearCanvas();
     detectCollisions(gameObjects);
+    detectEdgeCollisions(gameObjects, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     for (let i = 0; i < gameObjects.length; i++)
     {
