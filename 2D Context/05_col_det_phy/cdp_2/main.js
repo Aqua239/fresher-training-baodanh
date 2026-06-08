@@ -9,8 +9,7 @@ let canvas;
 let context;
 window.onload = init; 
 
-function init()
-{
+function init() {
     canvas = document.getElementById('canvas');
     context = canvas.getContext('2d');
 
@@ -18,13 +17,11 @@ function init()
     window.requestAnimationFrame(gameLoop);
 }
 
-function clearCanvas()
-{
+function clearCanvas() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function createWorldSquare()
-{
+function createWorldSquare() {
     gameObjects = [
     new Square(context, 250, 50, 50, 50, 0, 50, 1),
     new Square(context, 250, 300, 50, 50, 0, -50, 1),
@@ -35,7 +32,7 @@ function createWorldSquare()
     ];
 }
 
-function createWorldCircle(){
+function createWorldCircle() {
     gameObjects = [    
     new Circle(context, 100, 75, 10, 10, 30, 1),
     new Circle(context, 400, 50, 10, 0, 50, 1),
@@ -50,8 +47,7 @@ function createWorldCircle(){
     ];
 }
 
-function createWorldSC()
-{
+function createWorldSC() {
     gameObjects = [    
     new Circle(context, 100, 75, 10, 40, 30, 1),
     new Circle(context, 400, 50, 25, 0, 50, 1),
@@ -71,8 +67,7 @@ function createWorldSC()
     ];
 }
 
-function gameLoop(timeStamp)
-{
+function gameLoop(timeStamp) {
     secondsPassed = (timeStamp - oldTimeStamp) / 1000;
     oldTimeStamp = timeStamp;
 

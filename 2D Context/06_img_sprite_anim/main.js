@@ -1,6 +1,8 @@
-let canvas
-let context
-let img = new Image();
+let secondsPassed = 0;
+let oldTimeStamp = 0;
+let gameObjects = [];
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 700;
 
 window.onload = init;
 
@@ -8,7 +10,8 @@ function init() {
     canvas = document.getElementById('canvas');
     context = canvas.getContext('2d');
    
-    draw_ex2();
+    createWorldCircle();
+    window.requestAnimationFrame(gameLoop);
 }
 
 function draw_ex1() {
@@ -51,4 +54,46 @@ function draw_ex2() {
         }, 100);
     }
     sprite.src = "./img/spritesheet.png";
+}
+
+function createWorldCircle(){
+    gameObjects = [    
+    new Circle(context, 100, 75, 10, 10, 30, 1),
+    new Circle(context, 400, 50, 10, 0, 50, 1),
+    new Circle(context, 700, 75, 10, -40, 30, 1),
+    new Circle(context, 50, 300, 10, 50, 0, 1),
+    new Circle(context, 750, 300, 10, -50, 0, 1),
+    new Circle(context, 100, 525, 10, 40, -30, 1),
+    new Circle(context, 400, 550, 10, 0, -50, 1),
+    new Circle(context, 700, 525, 10, -40, -30, 1),
+    new Circle(context, 250, 150, 10, 35, 35, 1),
+    new Circle(context, 550, 450, 10, -35, -35, 1),
+    ];
+}
+
+function clearCanvas() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function gameLoop(timeStamp) {
+    secondsPassed = (timeStamp - oldTimeStamp) / 1000;
+    oldTimeStamp = timeStamp;
+
+    secondsPassed =  Math.min(secondsPassed, 0.1);
+
+    for (let i = 0; i < gameObjects.length; i++) 
+    {
+        gameObjects[i].update(secondsPassed);
+    }
+
+    clearCanvas();
+    detectCollisions(gameObjects);
+    detectEdgeCollisions(gameObjects, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    for (let i = 0; i < gameObjects.length; i++)
+    {
+        gameObjects[i].draw();
+    }
+
+    window.requestAnimationFrame(gameLoop);
 }
