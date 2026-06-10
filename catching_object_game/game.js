@@ -73,13 +73,13 @@ class Game {
             }
         });
 
-        this.canvas.addEventListener("mousemove", (event) => {
-            if (!this.run || this.gameOver) {
-                return;
-            }
+        // this.canvas.addEventListener("mousemove", (event) => {
+        //     if (!this.run || this.gameOver) {
+        //         return;
+        //     }
 
-            this.catcher.moveToCenter(this.canvasX(event.clientX), this.width);
-        });
+        //     this.catcher.moveToCenter(this.canvasX(event.clientX), this.width);
+        // });
 
         this.canvas.addEventListener("touchmove", (event) => {
             if (!this.run || this.gameOver) {
@@ -109,20 +109,50 @@ class Game {
 
         // TODO: Spawn falling objects and obstacles.
         // Hint: call this.spawnItems(secondsPassed).
+        this.spawnItems(secondsPassed);
 
         // TODO: Update falling objects and obstacles.
         // Hint: loop over this.fallingObjects and this.obstacles.
+        for(let i = 0; i < this.fallingObjects.length; i++){
+            this.fallingObjects[i].update(secondsPassed);
+        }
+
+        for(let i = 0; i < this.obstacles.length; i++){
+            this.obstacles[i].update(secondsPassed);
+        }
 
         // TODO: Check if catcher touches a falling object.
         // If yes, increase score and remove that object.
+        for(let i = this.fallingObjects.length - 1; i >= 0; i--){
+            let obj =  this.fallingObjects[i];
+            if(obj.isTouching(this.catcher)){
+                this.score += 100;
+                this.fallingObjects.splice(i, 1);
+            }
+            if(obj.isOffScreen(this.height)){
+                this.lives--;
+                this.fallingObjects.splice(i, 1);
+            }
+        }
 
         // TODO: Check if catcher touches an obstacle.
         // If yes, lose a life and remove that obstacle.
-
+        for(let i = this.obstacles.length - 1; i >= 0; i--){
+            let obj = this.obstacles[i];
+            if(obj.isTouching(this.catcher)){
+                this.lives--;
+                this.obstacles.splice(i, 1);
+            }
+            if(obj.isOffScreen(this.height)){
+                this.obstacles.splice(i, 1);
+            }
+        }
         // TODO: Remove items that leave the screen.
         // If a falling object reaches the bottom, lose a life.
-
         // TODO: If lives is 0, set gameOver and show restart UI.
+        if (this.lives <= 0) {
+            this.showGameOver();
+        }
     }
 
     spawnItems(secondsPassed) {
@@ -133,17 +163,28 @@ class Game {
         }
 
         this.spawnTimer = 0;
+        let columnIndex = Math.floor(Math.random() * 19)
+        let columnWidth = this.width/19;
+        let x = columnIndex * columnWidth;
+        let shouldSpawnObstacle = Math.random() < 0.3;
+
+        if(shouldSpawnObstacle){
+            this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, OBSTACLE_SPEED));
+        }
+        else{
+            this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, FALL_SPEED));
+        }
 
         // TODO: Randomly create either a FallingObject or an Obstacle.
         // Helpful values:
-        // let x = Math.random() * (this.width - 40);
-        // let shouldSpawnObstacle = Math.random() < 0.3;
+        //let x = Math.random() * (this.width - 40);
+        //let shouldSpawnObstacle = Math.random() < 0.3;
         //
         // Falling object example:
-        // this.fallingObjects.push(new FallingObject(this.context, x, -32, 32, FALL_SPEED));
+        //this.fallingObjects.push(new FallingObject(this.context, x, -32, 32, FALL_SPEED));
         //
         // Obstacle example:
-        // this.obstacles.push(new Obstacle(this.context, x, -36, 44, 28, OBSTACLE_SPEED));
+        //this.obstacles.push(new Obstacle(this.context, x, -36, 44, 28, OBSTACLE_SPEED));
     }
 
     start() {
