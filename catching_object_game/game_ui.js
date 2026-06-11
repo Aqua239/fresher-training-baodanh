@@ -11,8 +11,13 @@ class GameUI {
         this.scoreText = document.createElement("div");
         this.scoreText.className = "game-stat";
 
+        this.levelText = document.createElement("div");
+        this.levelText.className = "game-stat";
+
         this.hud.appendChild(this.livesText);
+         this.hud.appendChild(this.levelText);
         this.hud.appendChild(this.scoreText);
+       
 
         this.panel = document.createElement("div");
         this.panel.className = "game-panel hidden";
@@ -31,9 +36,10 @@ class GameUI {
         this.stage.appendChild(this.panel);
     }
 
-    updateGameInfo(score, lives) {
+    updateGameInfo(score, lives, level) {
         this.livesText.textContent = `Lives ${lives}`;
         this.scoreText.textContent = `Score ${score}`;
+        this.levelText.textContent = `Level ${level}`;
     }
 
     showMessage(text, buttonText, onClick) {

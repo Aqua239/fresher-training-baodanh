@@ -4,7 +4,7 @@ const CATCHER_DARK_COLOR = "#0369a1";
 class Catcher extends GameObject {
     constructor(context, x, y, width, height) {
         super(context, x, y, width, height);
-        this.speed = 700;
+        this.speed = 520;
         this.moveLeft = false;
         this.moveRight = false;
     }

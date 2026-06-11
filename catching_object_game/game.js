@@ -19,8 +19,12 @@ const CATCHER_WIDTH = 110;
 const CATCHER_HEIGHT = 28;
 const START_LIVES = 3;
 const FALL_SPEED = 180;
-const OBSTACLE_SPEED = 220;
-
+const OBSTACLE_SPEED = 180;
+const CATCHER_SPEED = 520;
+const MAX_CATCHER_SPEED = 1000;
+const TIME_SPAWN = 1.1;
+const SOFT_CAP = 3; //Soft cap speed game
+const SPEED_UP_THRESHOLD = 8; // Number of Objects needed to increase speed/level
 class Game {
     constructor(canvas) {
         this.canvas = canvas;
@@ -30,16 +34,24 @@ class Game {
         this.ui = new GameUI(canvas);
 
         this.score = 0;
+        this.level = 0;
         this.lives = START_LIVES;
         this.run = false;
         this.gameOver = false;
         this.oldTimeStamp = 0;
         this.spawnTimer = 0;
-        this.spawnTime = 1.1;
+        this.spawnTime = TIME_SPAWN;
+        this.lastSpawnColumn = 9;
+
+        this.catchCount = 0;
+        this.gameSpeed = 0;
+        this.currentMul = 0.2;
 
         this.fallingObjects = [];
         this.obstacles = [];
-
+        this.fallSpeed = FALL_SPEED;
+        this.obstacleSpeed = OBSTACLE_SPEED;
+        
         this.createActors();
         this.listenForPlayerInput();
         this.draw();
@@ -107,9 +119,22 @@ class Game {
     update(secondsPassed) {
         this.catcher.update(secondsPassed, this.width);
 
+        //Speed Game
+        this.level = Math.floor(this.catchCount / SPEED_UP_THRESHOLD)
+        
+        if(this.gameSpeed > SOFT_CAP){
+            this.currentMul = 0.02;
+            this.gameSpeed = SOFT_CAP + (this.currentMul * this.level);
+        }
+        else {
+            this.gameSpeed = 1 + (this.currentMul * this.level);
+        }
+
+
         // TODO: Spawn falling objects and obstacles.
         // Hint: call this.spawnItems(secondsPassed).
-        this.spawnItems(secondsPassed);
+        this.catcher.speed = Math.min(MAX_CATCHER_SPEED, CATCHER_SPEED * this.gameSpeed);
+        this.spawnItems(secondsPassed, this.gameSpeed);
 
         // TODO: Update falling objects and obstacles.
         // Hint: loop over this.fallingObjects and this.obstacles.
@@ -126,6 +151,7 @@ class Game {
         for(let i = this.fallingObjects.length - 1; i >= 0; i--){
             let obj =  this.fallingObjects[i];
             if(obj.isTouching(this.catcher)){
+                this.catchCount++;
                 this.score += 100;
                 this.fallingObjects.splice(i, 1);
             }
@@ -155,24 +181,30 @@ class Game {
         }
     }
 
-    spawnItems(secondsPassed) {
-        this.spawnTimer += secondsPassed;
-
-        if (this.spawnTimer < this.spawnTime) {
+    spawnItems(secondsPassed, gameSpeed) {
+        this.spawnTimer += secondsPassed; 
+        if (this.spawnTimer < (this.spawnTime/gameSpeed)) {
             return;
         }
 
         this.spawnTimer = 0;
-        let columnIndex = Math.floor(Math.random() * 19)
+        // LOGIC SPAWN NEO
+        let maxDistance = 9;
+        let minCol = Math.max(0, this.lastSpawnColumn - maxDistance);
+        let maxCol = Math.min(18, this.lastSpawnColumn + maxDistance);
+        
+        let columnIndex = Math.floor(Math.random() * (maxCol - minCol + 1)) + minCol;
+        this.lastSpawnColumn = columnIndex;
+        // let columnIndex = Math.floor(Math.random() * 19)
         let columnWidth = this.width/19;
         let x = columnIndex * columnWidth;
         let shouldSpawnObstacle = Math.random() < 0.3;
 
         if(shouldSpawnObstacle){
-            this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, OBSTACLE_SPEED));
+            this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, this.obstacleSpeed * this.gameSpeed));
         }
         else{
-            this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, FALL_SPEED));
+            this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, this.fallSpeed * this.gameSpeed));
         }
 
         // TODO: Randomly create either a FallingObject or an Obstacle.
@@ -196,10 +228,15 @@ class Game {
 
     restart() {
         this.score = 0;
+        this.level = 0;
         this.lives = START_LIVES;
         this.run = true;
         this.gameOver = false;
         this.spawnTimer = 0;
+        this.lastSpawnColumn = 9;
+        this.catchCount = 0;
+        this.gameSpeed = 1;
+        this.currentMul = 0.2;
         this.fallingObjects = [];
         this.obstacles = [];
         this.createActors();
@@ -223,7 +260,7 @@ class Game {
         this.fallingObjects.forEach((fallingObject) => fallingObject.draw());
         this.obstacles.forEach((obstacle) => obstacle.draw());
         this.catcher.draw();
-        this.ui.updateGameInfo(this.score, this.lives);
+        this.ui.updateGameInfo(this.score, this.lives, this.level + 1);
     }
 
     drawBackground() {
