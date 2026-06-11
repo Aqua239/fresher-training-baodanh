@@ -215,7 +215,7 @@ class Game {
         let maxCol = Math.min(18, this.lastSpawnColumn + maxDistance);
         
         let columnIndex = Math.floor(Math.random() * (maxCol - minCol + 1)) + minCol;
-        this.lastSpawnColumn = columnIndex;
+        
         // let columnIndex = Math.floor(Math.random() * 19)
         let columnWidth = this.width/19;
         let x = columnIndex * columnWidth;
@@ -224,12 +224,14 @@ class Game {
         if(this.needHeart) {
             this.hearts.push(new HeartObject(this.context, x + ((columnWidth - 40)/2), -40, 40, FALL_SPEED * this.gameSpeed));
             this.needHeart = false;
+            this.lastSpawnColumn = columnIndex;
         }
         else if(shouldSpawnObstacle){
             this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, OBSTACLE_SPEED * this.gameSpeed));
         }
         else{
             this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, FALL_SPEED * this.gameSpeed));
+            this.lastSpawnColumn = columnIndex;
         }
 
         // TODO: Randomly create either a FallingObject or an Obstacle.
