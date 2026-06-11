@@ -19,9 +19,9 @@ const CATCHER_WIDTH = 110;
 const CATCHER_HEIGHT = 28;
 const START_LIVES = 3;
 const FALL_SPEED = 180;
-const OBSTACLE_SPEED = 180;
+const OBSTACLE_SPEED = 220;
 const CATCHER_SPEED = 520;
-const MAX_CATCHER_SPEED = 1000;
+const MAX_CATCHER_SPEED = 1050;
 const TIME_SPAWN = 1.1;
 const SOFT_CAP = 3; //Soft cap speed game
 const SPEED_UP_THRESHOLD = 8; // Number of Objects needed to increase speed/level
@@ -118,11 +118,8 @@ class Game {
     }
 
     update(secondsPassed) {
-        this.catcher.update(secondsPassed, this.width);
-
-        //Speed Game
+        // Calculate game speed based on current level
         this.level = Math.floor(this.catchCount / SPEED_UP_THRESHOLD)
-        
         if(this.gameSpeed > SOFT_CAP){
             this.currentMul = 0.02;
             this.gameSpeed = SOFT_CAP + (this.currentMul * this.level);
@@ -131,14 +128,12 @@ class Game {
             this.gameSpeed = 1 + (this.currentMul * this.level);
         }
 
-
-        // TODO: Spawn falling objects and obstacles.
-        // Hint: call this.spawnItems(secondsPassed).
+        // Calculate catcher speed based on current level
+        this.catcher.update(secondsPassed, this.width);
         this.catcher.speed = Math.min(MAX_CATCHER_SPEED, CATCHER_SPEED * this.gameSpeed);
         this.spawnItems(secondsPassed);
 
-        // TODO: Update falling objects and obstacles.
-        // Hint: loop over this.fallingObjects and this.obstacles.
+        // Update all objects
         for(let i = 0; i < this.fallingObjects.length; i++){
             this.fallingObjects[i].update(secondsPassed);
         }
@@ -151,8 +146,7 @@ class Game {
             this.hearts[i].update(secondsPassed);
         }
 
-        // TODO: Check if catcher touches a falling object.
-        // If yes, increase score and remove that object.
+        // Check collisions with the catcher
         for(let i = this.hearts.length - 1; i >= 0; i--){
             let obj = this.hearts[i];
             if(obj.isTouching(this.catcher)){
@@ -161,7 +155,7 @@ class Game {
                 this.catchCount++;
                 this.score += 100;
             }
-            if(obj.isOffScreen(this.height)){
+            else if(obj.isOffScreen(this.height)){
                 this.hearts.splice(i, 1);
             }
         }
@@ -176,27 +170,24 @@ class Game {
                 this.score += 100;
                 this.fallingObjects.splice(i, 1);
             }
-            if(obj.isOffScreen(this.height)){
+            else if(obj.isOffScreen(this.height)){
                 this.lives--;
                 this.fallingObjects.splice(i, 1);
             }
         }
 
-        // TODO: Check if catcher touches an obstacle.
-        // If yes, lose a life and remove that obstacle.
         for(let i = this.obstacles.length - 1; i >= 0; i--){
             let obj = this.obstacles[i];
             if(obj.isTouching(this.catcher)){
                 this.lives--;
                 this.obstacles.splice(i, 1);
             }
-            if(obj.isOffScreen(this.height)){
+            else if(obj.isOffScreen(this.height)){
                 this.obstacles.splice(i, 1);
             }
         }
-        // TODO: Remove items that leave the screen.
-        // If a falling object reaches the bottom, lose a life.
-        // TODO: If lives is 0, set gameOver and show restart UI.
+
+        // Check game over
         if (this.lives <= 0) {
             this.showGameOver();
         }
@@ -209,18 +200,18 @@ class Game {
         }
 
         this.spawnTimer = 0;
-        // LOGIC SPAWN NEO
-        let maxDistance = 9;
+        // let columnIndex = Math.floor(Math.random() * 19)        
+        // Calculate spawn column within max distance
+        let maxDistance = 7;
         let minCol = Math.max(0, this.lastSpawnColumn - maxDistance);
         let maxCol = Math.min(18, this.lastSpawnColumn + maxDistance);
-        
         let columnIndex = Math.floor(Math.random() * (maxCol - minCol + 1)) + minCol;
-        
-        // let columnIndex = Math.floor(Math.random() * 19)
+             
         let columnWidth = this.width/19;
         let x = columnIndex * columnWidth;
         let shouldSpawnObstacle = Math.random() < 0.3;
 
+        // Logic spawn
         if(this.needHeart) {
             this.hearts.push(new HeartObject(this.context, x + ((columnWidth - 40)/2), -40, 40, FALL_SPEED * this.gameSpeed));
             this.needHeart = false;
@@ -233,17 +224,6 @@ class Game {
             this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, FALL_SPEED * this.gameSpeed));
             this.lastSpawnColumn = columnIndex;
         }
-
-        // TODO: Randomly create either a FallingObject or an Obstacle.
-        // Helpful values:
-        //let x = Math.random() * (this.width - 40);
-        //let shouldSpawnObstacle = Math.random() < 0.3;
-        //
-        // Falling object example:
-        //this.fallingObjects.push(new FallingObject(this.context, x, -32, 32, FALL_SPEED));
-        //
-        // Obstacle example:
-        //this.obstacles.push(new Obstacle(this.context, x, -36, 44, 28, OBSTACLE_SPEED));
     }
 
     start() {
@@ -264,8 +244,8 @@ class Game {
         this.catchCount = 0;
         this.gameSpeed = 1;
         this.currentMul = 0.2;
-        this.hearts = [];
         this.needHeart = false;
+        this.hearts = [];
         this.fallingObjects = [];
         this.obstacles = [];
         this.createActors();

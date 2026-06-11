@@ -9,9 +9,7 @@ class HeartObject extends GameObject {
     }
 
     update(secondsPassed) {
-        // TODO: Move the object downward.
         super.update(secondsPassed);
-        // Hint: call super.update(secondsPassed).
     }
 
     draw() {

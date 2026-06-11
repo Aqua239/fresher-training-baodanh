@@ -7,9 +7,7 @@ class Obstacle extends GameObject {
     }
 
     update(secondsPassed) {
-        // TODO: Move the obstacle downward.
         super.update(secondsPassed);
-        // Hint: call super.update(secondsPassed).
     }
 
     draw() {
@@ -23,7 +21,6 @@ class Obstacle extends GameObject {
     }
 
     isOffScreen(boardHeight) {
-        // TODO: Return true when the obstacle is below the canvas.
         if(this.y >boardHeight - 64){
             return true;
         }

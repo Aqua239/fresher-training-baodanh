@@ -15,7 +15,7 @@ class GameUI {
         this.levelText.className = "game-stat";
 
         this.hud.appendChild(this.livesText);
-         this.hud.appendChild(this.levelText);
+        this.hud.appendChild(this.levelText);
         this.hud.appendChild(this.scoreText);
        
 

@@ -4,24 +4,18 @@ const CATCHER_DARK_COLOR = "#0369a1";
 class Catcher extends GameObject {
     constructor(context, x, y, width, height) {
         super(context, x, y, width, height);
-        this.speed = 520;
+        this.speed = 600;
         this.moveLeft = false;
         this.moveRight = false;
     }
 
     update(secondsPassed, boardWidth) {
-        // TODO: Use moveLeft and moveRight to change this.x.
-        // Hint:
-        // if (this.moveLeft) this.x -= this.speed * secondsPassed;
-        // if (this.moveRight) this.x += this.speed * secondsPassed;
         if(this.moveLeft){
             this.x -= this.speed * secondsPassed;
         }
         else if (this.moveRight){
             this.x += this.speed * secondsPassed;
         }
-        // TODO: Keep the catcher inside the canvas.
-        // Hint: clamp this.x between 0 and boardWidth - this.width.
         this.keepInside(boardWidth);
     }
 
