@@ -1,10 +1,11 @@
+const HEART_IMAGE = new Image();
+HEART_IMAGE.src = "./img/heart.png";
 class HeartObject extends GameObject {
     constructor(context, x, y, size, speed) {
         super(context, x, y, size, size, 0, speed);
         this.caught= false;
 
-        this.img = new Image();
-        this.img.src = "./img/heart.png";
+        this.img = HEART_IMAGE;
     }
 
     update(secondsPassed) {
