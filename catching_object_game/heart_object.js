@@ -1,0 +1,31 @@
+class HeartObject extends GameObject {
+    constructor(context, x, y, size, speed) {
+        super(context, x, y, size, size, 0, speed);
+        this.caught= false;
+
+        this.img = new Image();
+        this.img.src = "./img/heart.png";
+    }
+
+    update(secondsPassed) {
+        // TODO: Move the object downward.
+        super.update(secondsPassed);
+        // Hint: call super.update(secondsPassed).
+    }
+
+    draw() {
+        if(this.img.complete) {
+            this.context.imageSmoothingEnabled = true;
+            this.context.imageSmoothingQuality = 'high';
+            this.context.drawImage(this.img, this.x, this.y, this.width, this.height);
+        }
+    }
+
+    isOffScreen(boardHeight) {
+        if(this.y > boardHeight - 64){
+            return true;
+        }
+        return false;
+    }
+}
+

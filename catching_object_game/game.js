@@ -25,6 +25,7 @@ const MAX_CATCHER_SPEED = 1000;
 const TIME_SPAWN = 1.1;
 const SOFT_CAP = 3; //Soft cap speed game
 const SPEED_UP_THRESHOLD = 8; // Number of Objects needed to increase speed/level
+const HEART_THRESHOLD = 15; // Number of Objects needed to spawn 1 heart
 class Game {
     constructor(canvas) {
         this.canvas = canvas;
@@ -49,8 +50,8 @@ class Game {
 
         this.fallingObjects = [];
         this.obstacles = [];
-        this.fallSpeed = FALL_SPEED;
-        this.obstacleSpeed = OBSTACLE_SPEED;
+        this.hearts = [];
+        this.needHeart = false;
         
         this.createActors();
         this.listenForPlayerInput();
@@ -134,7 +135,7 @@ class Game {
         // TODO: Spawn falling objects and obstacles.
         // Hint: call this.spawnItems(secondsPassed).
         this.catcher.speed = Math.min(MAX_CATCHER_SPEED, CATCHER_SPEED * this.gameSpeed);
-        this.spawnItems(secondsPassed, this.gameSpeed);
+        this.spawnItems(secondsPassed);
 
         // TODO: Update falling objects and obstacles.
         // Hint: loop over this.fallingObjects and this.obstacles.
@@ -146,12 +147,32 @@ class Game {
             this.obstacles[i].update(secondsPassed);
         }
 
+        for(let i = 0; i < this.hearts.length; i++){
+            this.hearts[i].update(secondsPassed);
+        }
+
         // TODO: Check if catcher touches a falling object.
         // If yes, increase score and remove that object.
+        for(let i = this.hearts.length - 1; i >= 0; i--){
+            let obj = this.hearts[i];
+            if(obj.isTouching(this.catcher)){
+                this.lives++;
+                this.hearts.splice(i, 1);
+                this.catchCount++;
+                this.score += 100;
+            }
+            if(obj.isOffScreen(this.height)){
+                this.hearts.splice(i, 1);
+            }
+        }
+        
         for(let i = this.fallingObjects.length - 1; i >= 0; i--){
             let obj =  this.fallingObjects[i];
             if(obj.isTouching(this.catcher)){
                 this.catchCount++;
+                if (this.catchCount % HEART_THRESHOLD === 0 && this.score != 0) {
+                    this.needHeart = true;
+                }
                 this.score += 100;
                 this.fallingObjects.splice(i, 1);
             }
@@ -181,9 +202,9 @@ class Game {
         }
     }
 
-    spawnItems(secondsPassed, gameSpeed) {
+    spawnItems(secondsPassed) {
         this.spawnTimer += secondsPassed; 
-        if (this.spawnTimer < (this.spawnTime/gameSpeed)) {
+        if (this.spawnTimer < (this.spawnTime/this.gameSpeed)) {
             return;
         }
 
@@ -200,11 +221,15 @@ class Game {
         let x = columnIndex * columnWidth;
         let shouldSpawnObstacle = Math.random() < 0.3;
 
-        if(shouldSpawnObstacle){
-            this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, this.obstacleSpeed * this.gameSpeed));
+        if(this.needHeart) {
+            this.hearts.push(new HeartObject(this.context, x + ((columnWidth - 40)/2), -40, 40, FALL_SPEED * this.gameSpeed));
+            this.needHeart = false;
+        }
+        else if(shouldSpawnObstacle){
+            this.obstacles.push(new Obstacle(this.context, x - ((44 - columnWidth)/2), -36, 44, 28, OBSTACLE_SPEED * this.gameSpeed));
         }
         else{
-            this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, this.fallSpeed * this.gameSpeed));
+            this.fallingObjects.push(new FallingObject(this.context, x + ((columnWidth - 32)/2), -32, 32, FALL_SPEED * this.gameSpeed));
         }
 
         // TODO: Randomly create either a FallingObject or an Obstacle.
@@ -237,6 +262,8 @@ class Game {
         this.catchCount = 0;
         this.gameSpeed = 1;
         this.currentMul = 0.2;
+        this.hearts = [];
+        this.needHeart = false;
         this.fallingObjects = [];
         this.obstacles = [];
         this.createActors();
@@ -259,6 +286,7 @@ class Game {
         this.drawBackground();
         this.fallingObjects.forEach((fallingObject) => fallingObject.draw());
         this.obstacles.forEach((obstacle) => obstacle.draw());
+        this.hearts.forEach((heart) => heart.draw());
         this.catcher.draw();
         this.ui.updateGameInfo(this.score, this.lives, this.level + 1);
     }
