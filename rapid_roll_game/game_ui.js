@@ -14,9 +14,8 @@ class GameUI {
         this.levelText = document.createElement("div");
         this.levelText.className = "game-stat";
 
-        this.hud.insertBefore(this.livesText);
-        this.hud.insertBefore(this.scoreText);
-       
+        this.hud.appendChild(this.livesText);
+        this.hud.appendChild(this.scoreText);
 
         this.panel = document.createElement("div");
         this.panel.className = "game-panel hidden";
@@ -36,7 +35,7 @@ class GameUI {
     }
 
     updateGameInfo(score, lives, level) {
-        this.livesText.textContent = `Lives ${lives}`;
+        this.livesText.textContent = `Lives ${lives} ♡`;
         this.scoreText.textContent = `Score ${score}`;
     }
 
