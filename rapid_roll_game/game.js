@@ -21,6 +21,7 @@ const PLATFORM_SPEED = 120;
 const TIME_SPAWN = 1;
 const PLATFORM_WIDTH = 189;
 const PLATFORM_HEIGHT = 27;
+const SPIKED_REDUCTION_RATE = 0.1; 
 const SPIKED_TOP = new Image();
 SPIKED_TOP.src = "./img/spiked_top.png"
 class Game {
@@ -39,6 +40,7 @@ class Game {
         this.oldTimeStamp = 0;
         this.spawnTimer = 0;
         this.spawnTime = TIME_SPAWN;
+        this.currentSpike = 0;
 
         this.gameSpeed = 1;
         this.currentMul = 0.2;
@@ -157,13 +159,15 @@ class Game {
         this.spawnTimer = 0;
         let temp = Math.random() * 800;
         let x = temp > (800 - PLATFORM_WIDTH) ? (800-PLATFORM_WIDTH) : temp;
-        let shouldSpawnSpiked = Math.random() < 0.2;
+        let shouldSpawnSpiked = Math.random() < (0.3 - this.currentSpike * SPIKED_REDUCTION_RATE);
 
         if(shouldSpawnSpiked) {
             this.spikedObjects.push(new SpikedPlatform(this.context, x, this.height + PLATFORM_HEIGHT, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            this.currentSpike++;
         }
         else {
             this.normalObjects.push(new NormalPlatform(this.context, x, this.height + PLATFORM_HEIGHT, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            this.currentSpike = 0;
         }
     }
 
