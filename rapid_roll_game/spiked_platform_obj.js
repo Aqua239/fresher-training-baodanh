@@ -25,4 +25,14 @@ class SpikedPlatform extends GameObject {
         }
         return false;
     }
+
+    isTouching(other) {
+        let hitboxY = this.y +27;
+        return !(
+            this.right() < other.x ||
+            this.x > other.right() ||
+            this.bottom() < other.y ||
+            hitboxY > other.bottom()
+        );
+    }
 }

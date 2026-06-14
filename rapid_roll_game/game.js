@@ -6,7 +6,7 @@ window.onload = () => {
 
     canvas = document.getElementById("canvas");
     canvas.width = 800;
-    canvas.height = 800;
+    canvas.height = 700;
 
     gameWorld = new Game(canvas);
     window.gameWorld = gameWorld;
@@ -14,14 +14,17 @@ window.onload = () => {
 }
 
 const BALL_EDGE = 40;
-const BALL_SPEED = 700;
-const BALL_FALLING_SPEED = 300;
+const BALL_SPEED = 800;
+const BALL_FALLING_SPEED = 250;
 const START_LIVES = 2;
 const PLATFORM_SPEED = 120;
 const TIME_SPAWN = 1;
 const PLATFORM_WIDTH = 189;
 const PLATFORM_HEIGHT = 27;
-const SPIKED_REDUCTION_RATE = 0.1; 
+const SPIKED_REDUCTION_RATE = 0.1;
+const SPIKED_RATE = 0.3;
+const START_SPAWN_X = 400;
+const START_SPAWN_Y = 400;
 const SPIKED_TOP = new Image();
 SPIKED_TOP.src = "./img/spiked_top.png"
 class Game {
@@ -48,6 +51,7 @@ class Game {
         this.normalObjects = [];
         this.spikedObjects = [];
 
+        this.initStartingPlatform();
         this.createActors();
         this.listenForPlayerInput();
         this.draw();
@@ -55,15 +59,40 @@ class Game {
     }
 
     createActors(){
+        let saveSpawnX;
+        let saveSpawnY;
+        for(let i = 0; i < this.normalObjects.length; i++) {
+            if(this.normalObjects[i].y > 300) {
+                saveSpawnX = this.normalObjects[i].x + (PLATFORM_WIDTH / 2);
+                saveSpawnY = this.normalObjects[i].y - BALL_EDGE;
+                break;
+            }
+        }
         this.ball = new Ball(
             this.context,
-            this.width / 3,
-            this.height / 3,
+            saveSpawnX,
+            saveSpawnY,
             BALL_EDGE,
             BALL_EDGE,
             BALL_FALLING_SPEED,
             BALL_SPEED
         )
+    }
+
+    initStartingPlatform() {
+        this.normalObjects.push(new NormalPlatform(this.context, START_SPAWN_X - (PLATFORM_WIDTH / 2), START_SPAWN_Y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+        for(let i = 1; i < 3; i++) {
+            let verticalSpacing = 130;
+            let temp = Math.random() * this.width;
+            let x = temp > (this.width - PLATFORM_WIDTH) ? (this.width - PLATFORM_WIDTH) : temp;
+            let shouldSpawnSpiked = Math.random() < 0.1;
+            if(shouldSpawnSpiked) {
+                this.spikedObjects.push(new SpikedPlatform(this.context, x, START_SPAWN_Y + (verticalSpacing * i), PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            }
+            else {
+                this.normalObjects.push(new NormalPlatform(this.context, x, START_SPAWN_Y + (verticalSpacing * i), PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            }
+        }  
     }
 
     listenForPlayerInput() {
@@ -120,7 +149,7 @@ class Game {
         for(let i = this.normalObjects.length - 1; i >= 0; i--) {
             let obj = this.normalObjects[i];
             if(obj.isTouching(this.ball)) {
-                if(this.ball.y + (BALL_EDGE / 4) < obj.y) {
+                if(this.ball.y + (BALL_EDGE / 2) < obj.y) {
                     this.ball.y = obj.y - BALL_EDGE;
                 }
             }
@@ -157,9 +186,9 @@ class Game {
             return;
         }
         this.spawnTimer = 0;
-        let temp = Math.random() * 800;
-        let x = temp > (800 - PLATFORM_WIDTH) ? (800-PLATFORM_WIDTH) : temp;
-        let shouldSpawnSpiked = Math.random() < (0.3 - this.currentSpike * SPIKED_REDUCTION_RATE);
+        let temp = Math.random() * this.width;
+        let x = temp > (this.width - PLATFORM_WIDTH) ? (this.width - PLATFORM_WIDTH) : temp;
+        let shouldSpawnSpiked = Math.random() < (SPIKED_RATE - this.currentSpike * SPIKED_REDUCTION_RATE);
 
         if(shouldSpawnSpiked) {
             this.spikedObjects.push(new SpikedPlatform(this.context, x, this.height + PLATFORM_HEIGHT, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
@@ -186,6 +215,7 @@ class Game {
         this.spawnTimer = 0;
         this.normalObjects = [];
         this.spikedObjects = [];
+        this.initStartingPlatform();
         this.createActors();
         this.oldTimeStamp = performance.now();
         this.ui.hideMessage();
@@ -213,7 +243,7 @@ class Game {
     drawSpikedTop() {
         if(this.img.complete) {
             this.context.imageSmoothingEnabled = false;
-            this.context.drawImage(this.img, 0, 0, 800, 45);
+            this.context.drawImage(this.img, 0, 0, this.width, 45);
         }
     }
 

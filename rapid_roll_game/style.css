@@ -54,7 +54,7 @@ canvas {
     display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 800/800;
+    aspect-ratio: 800/700;
     border: 3px solid #111827;
     border-radius: 8px;
     background: #928A24;
