@@ -27,7 +27,7 @@ class SpikedPlatform extends GameObject {
     }
 
     isTouching(other) {
-        let hitboxY = this.y +27;
+        let hitboxY = this.y + 9;
         return !(
             this.right() < other.x ||
             this.x > other.right() ||

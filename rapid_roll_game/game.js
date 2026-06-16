@@ -16,12 +16,18 @@ window.onload = () => {
 const BALL_EDGE = 40;
 const BALL_SPEED = 800;
 const BALL_FALLING_SPEED = 250;
-const START_LIVES = 2;
-const PLATFORM_SPEED = 120;
-const TIME_SPAWN = 1;
+
 const PLATFORM_WIDTH = 189;
 const PLATFORM_HEIGHT = 27;
-const SPIKED_REDUCTION_RATE = 0.1;
+const PLATFORM_SPEED = 120;
+
+const HEART_WIDTH = 36;
+const HEART_HEIGHT = 42; 
+const HEART_RATE = 100;
+
+const START_LIVES = 2;
+const TIME_SPAWN = 1;
+const SPIKED_REDUCTION_RATE = 0.15;
 const SPIKED_RATE = 0.3;
 const START_SPAWN_X = 400;
 const START_SPAWN_Y = 400;
@@ -44,12 +50,15 @@ class Game {
         this.spawnTimer = 0;
         this.spawnTime = TIME_SPAWN;
         this.currentSpike = 0;
+        this.lastHeartScore = 0;
+        this.isHeartPending = false;
 
         this.gameSpeed = 1;
         this.currentMul = 0.2;
 
         this.normalObjects = [];
         this.spikedObjects = [];
+        this.heartObjects = [];
 
         this.initStartingPlatform();
         this.createActors();
@@ -58,16 +67,19 @@ class Game {
         this.showStart();
     }
 
-    createActors(){
-        let saveSpawnX;
-        let saveSpawnY;
+    saveSpawnPoint(widthObject) {
         for(let i = 0; i < this.normalObjects.length; i++) {
             if(this.normalObjects[i].y > 300) {
-                saveSpawnX = this.normalObjects[i].x + (PLATFORM_WIDTH / 2);
-                saveSpawnY = this.normalObjects[i].y - BALL_EDGE;
-                break;
+                let x = this.normalObjects[i].x + (PLATFORM_WIDTH / 2);
+                let y = this.normalObjects[i].y - widthObject;
+                return {saveSpawnX: x, saveSpawnY: y};
             }
         }
+        return {saveSpawnX: 0, saveSpawnY: 0};
+    }
+
+    createActors() {
+        let {saveSpawnX, saveSpawnY} = this.saveSpawnPoint(BALL_EDGE);
         this.ball = new Ball(
             this.context,
             saveSpawnX,
@@ -81,7 +93,7 @@ class Game {
 
     initStartingPlatform() {
         this.normalObjects.push(new NormalPlatform(this.context, START_SPAWN_X - (PLATFORM_WIDTH / 2), START_SPAWN_Y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
-        for(let i = 1; i < 3; i++) {
+        for(let i = 1; i < 4; i++) {
             let verticalSpacing = 130;
             let temp = Math.random() * this.width;
             let x = temp > (this.width - PLATFORM_WIDTH) ? (this.width - PLATFORM_WIDTH) : temp;
@@ -127,15 +139,6 @@ class Game {
     }
 
     update(secondsPassed) {
-        this.ball.update(secondsPassed, this.width);
-
-        if(this.ball.isOffScreenBottom(this.height)) {
-            this.checkGameOver();
-        }
-        else if (this.ball.isOffScreenTop()) {
-            this.checkGameOver();
-        }
-
         this.spawnPlatform(secondsPassed);
 
         for(let i = 0; i < this.normalObjects.length; i++) {
@@ -146,25 +149,68 @@ class Game {
             this.spikedObjects[i].update(secondsPassed * this.gameSpeed);
         }
 
-        for(let i = this.normalObjects.length - 1; i >= 0; i--) {
-            let obj = this.normalObjects[i];
-            if(obj.isTouching(this.ball)) {
-                if(this.ball.y + (BALL_EDGE / 2) < obj.y) {
-                    this.ball.y = obj.y - BALL_EDGE;
-                }
-            }
-            else if (obj.isOffScreen()) {
-                this.normalObjects.splice(i, 1);
-            }
+        for(let i = 0; i < this.heartObjects.length; i++) {
+            this.heartObjects[i].update(secondsPassed * this.gameSpeed);
         }
 
-        for(let i = this.spikedObjects.length - 1; i >= 0; i--) {
-            let obj = this.spikedObjects[i];
-            if(obj.isTouching(this.ball)) {
+        let currentIntScore = Math.floor(this.score);
+        if(currentIntScore >= this.lastHeartScore + HEART_RATE) {
+            this.lastHeartScore += HEART_RATE;
+            this.isHeartPending = true;
+        }
+
+        if (this.ball) {
+            let oldY = this.ball.y;
+            this.ball.update(secondsPassed, this.width);
+            if(this.ball.isOffScreenBottom(this.height)) {
                 this.checkGameOver();
+                return;
             }
-            else if (obj.isOffScreen()) {
-                this.spikedObjects.splice(i, 1);
+            else if (this.ball.isOffScreenTop()) {
+                this.checkGameOver();
+                return;
+            }
+
+            let currentlyStandingOn = null;
+            for(let i = this.normalObjects.length - 1; i >= 0; i--) {
+                let obj = this.normalObjects[i];
+                if(obj.isTouching(this.ball)) {
+                    if(this.ball.y + (BALL_EDGE / 2) < obj.y) {
+                        this.ball.y = obj.y - BALL_EDGE;
+                    }
+                }
+                else if (obj.isOffScreen()) {
+                    this.normalObjects.splice(i, 1);
+                }
+            }
+            
+            for(let i = this.spikedObjects.length - 1; i >= 0; i--) {
+                let obj = this.spikedObjects[i];
+                if(obj.isTouching(this.ball)) {
+                    this.checkGameOver();
+                    return;
+                }
+                else if (obj.isOffScreen()) {
+                    this.spikedObjects.splice(i, 1);
+                }
+            }
+
+            for(let i = this.heartObjects.length - 1; i >= 0; i--) {
+                let obj = this.heartObjects[i];
+                if(obj.isTouching(this.ball)) {
+                    this.lives++;
+                    this.heartObjects.splice(i, 1);
+                }
+                else if (obj.isOffScreen()) {
+                    this.heartObjects.splice(i, 1);
+                }
+            }
+
+            let ballMoveY = this.ball.y - oldY;
+            let platformMoveY = PLATFORM_SPEED * secondsPassed * this.gameSpeed;
+            let depthChange = platformMoveY + ballMoveY;
+            if (depthChange > 0) {
+                this.score += depthChange / 10;
             }
         }
     }
@@ -172,7 +218,10 @@ class Game {
     checkGameOver() {
         if(this.lives > 1) {
             this.lives--;
-            this.createActors();
+            this.ball = null;
+            setTimeout(() => {
+                this.createActors();       
+            }, 1000);
         }
         else {
             this.lives--;
@@ -188,14 +237,22 @@ class Game {
         this.spawnTimer = 0;
         let temp = Math.random() * this.width;
         let x = temp > (this.width - PLATFORM_WIDTH) ? (this.width - PLATFORM_WIDTH) : temp;
+        let y = this.height + 100;
         let shouldSpawnSpiked = Math.random() < (SPIKED_RATE - this.currentSpike * SPIKED_REDUCTION_RATE);
 
         if(shouldSpawnSpiked) {
-            this.spikedObjects.push(new SpikedPlatform(this.context, x, this.height + PLATFORM_HEIGHT, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            this.spikedObjects.push(new SpikedPlatform(this.context, x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
             this.currentSpike++;
         }
         else {
-            this.normalObjects.push(new NormalPlatform(this.context, x, this.height + PLATFORM_HEIGHT, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            if(this.isHeartPending){
+                this.heartObjects.push(new Heart(this.context, x + (PLATFORM_WIDTH/2) - (HEART_WIDTH/2), y  - HEART_HEIGHT, HEART_WIDTH, HEART_HEIGHT, -PLATFORM_SPEED));
+                this.normalObjects.push(new NormalPlatform(this.context, x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+                this.isHeartPending = false;
+            }
+            else{
+                this.normalObjects.push(new NormalPlatform(this.context, x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
+            }
             this.currentSpike = 0;
         }
     }
@@ -213,8 +270,11 @@ class Game {
         this.run = true;
         this.gameOver = false;
         this.spawnTimer = 0;
+        this.lastHeartScore = 0;
+        this.isHeartPending = false;
         this.normalObjects = [];
         this.spikedObjects = [];
+        this.heartObjects = [];
         this.initStartingPlatform();
         this.createActors();
         this.oldTimeStamp = performance.now();
@@ -236,8 +296,11 @@ class Game {
         this.drawSpikedTop();
         this.normalObjects.forEach((normalObject) => normalObject.draw());
         this.spikedObjects.forEach((spikedObject) => spikedObject.draw());
-        this.ball.draw();
-        this.ui.updateGameInfo(this.score, this.lives);
+        this.heartObjects.forEach((heart) => heart.draw());
+        if(this.ball) {
+            this.ball.draw();
+        }
+        this.ui.updateGameInfo(Math.floor(this.score), this.lives);
     }
 
     drawSpikedTop() {
