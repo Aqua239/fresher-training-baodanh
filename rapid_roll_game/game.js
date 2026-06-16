@@ -14,21 +14,23 @@ window.onload = () => {
 }
 
 const BALL_EDGE = 40;
-const BALL_SPEED = 800;
-const BALL_FALLING_SPEED = 250;
+const BALL_SPEED = 1000;
+const BALL_FALLING_SPEED = 400;
 
 const PLATFORM_WIDTH = 189;
 const PLATFORM_HEIGHT = 27;
 const PLATFORM_SPEED = 120;
 
 const HEART_WIDTH = 36;
-const HEART_HEIGHT = 42; 
-const HEART_RATE = 100;
+const HEART_HEIGHT = 42;
+const HEART_SPEED = PLATFORM_SPEED; 
+
+const HEART_RATE = 750;
+const SPIKED_RATE = 0.3;
+const SPIKED_REDUCTION_RATE = 0.15;
 
 const START_LIVES = 2;
-const TIME_SPAWN = 1;
-const SPIKED_REDUCTION_RATE = 0.15;
-const SPIKED_RATE = 0.3;
+const TIME_SPAWN = 1.2;
 const START_SPAWN_X = 400;
 const START_SPAWN_Y = 400;
 const SPIKED_TOP = new Image();
@@ -52,9 +54,10 @@ class Game {
         this.currentSpike = 0;
         this.lastHeartScore = 0;
         this.isHeartPending = false;
+        this.isWaitingToSpawnBall = true;
 
         this.gameSpeed = 1;
-        this.currentMul = 0.2;
+        this.multiplier = 0.02;
 
         this.normalObjects = [];
         this.spikedObjects = [];
@@ -69,26 +72,29 @@ class Game {
 
     saveSpawnPoint(widthObject) {
         for(let i = 0; i < this.normalObjects.length; i++) {
-            if(this.normalObjects[i].y > 300) {
+            if(this.normalObjects[i].y > 300 && this.normalObjects[i].y < this.height) {
                 let x = this.normalObjects[i].x + (PLATFORM_WIDTH / 2);
                 let y = this.normalObjects[i].y - widthObject;
                 return {saveSpawnX: x, saveSpawnY: y};
             }
         }
-        return {saveSpawnX: 0, saveSpawnY: 0};
+        return null;
     }
 
     createActors() {
-        let {saveSpawnX, saveSpawnY} = this.saveSpawnPoint(BALL_EDGE);
-        this.ball = new Ball(
-            this.context,
-            saveSpawnX,
-            saveSpawnY,
-            BALL_EDGE,
-            BALL_EDGE,
-            BALL_FALLING_SPEED,
-            BALL_SPEED
-        )
+        let spawnBall = this.saveSpawnPoint(BALL_EDGE);
+        if(spawnBall) {
+            this.ball = new Ball(
+                this.context,
+                spawnBall.saveSpawnX - (BALL_EDGE/2),
+                spawnBall.saveSpawnY,
+                BALL_EDGE,
+                BALL_EDGE,
+                BALL_FALLING_SPEED,
+                BALL_SPEED
+            )
+            this.isWaitingToSpawnBall = false;
+        }
     }
 
     initStartingPlatform() {
@@ -139,6 +145,12 @@ class Game {
     }
 
     update(secondsPassed) {
+        if (this.gameSpeed < 3.0) {
+            this.gameSpeed += this.multiplier * secondsPassed;
+        }
+        else {
+            this.gameSpeed += (this.multiplier * secondsPassed) / 10;
+        }
         this.spawnPlatform(secondsPassed);
 
         for(let i = 0; i < this.normalObjects.length; i++) {
@@ -157,6 +169,10 @@ class Game {
         if(currentIntScore >= this.lastHeartScore + HEART_RATE) {
             this.lastHeartScore += HEART_RATE;
             this.isHeartPending = true;
+        }
+
+        if (this.isWaitingToSpawnBall){
+            this.createActors();
         }
 
         if (this.ball) {
@@ -220,7 +236,7 @@ class Game {
             this.lives--;
             this.ball = null;
             setTimeout(() => {
-                this.createActors();       
+                this.isWaitingToSpawnBall = true;       
             }, 1000);
         }
         else {
@@ -237,7 +253,7 @@ class Game {
         this.spawnTimer = 0;
         let temp = Math.random() * this.width;
         let x = temp > (this.width - PLATFORM_WIDTH) ? (this.width - PLATFORM_WIDTH) : temp;
-        let y = this.height + 100;
+        let y = this.height + 70;
         let shouldSpawnSpiked = Math.random() < (SPIKED_RATE - this.currentSpike * SPIKED_REDUCTION_RATE);
 
         if(shouldSpawnSpiked) {
@@ -246,7 +262,7 @@ class Game {
         }
         else {
             if(this.isHeartPending){
-                this.heartObjects.push(new Heart(this.context, x + (PLATFORM_WIDTH/2) - (HEART_WIDTH/2), y  - HEART_HEIGHT, HEART_WIDTH, HEART_HEIGHT, -PLATFORM_SPEED));
+                this.heartObjects.push(new Heart(this.context, x + (PLATFORM_WIDTH/2) - (HEART_WIDTH/2), y  - HEART_HEIGHT, HEART_WIDTH, HEART_HEIGHT, -HEART_SPEED));
                 this.normalObjects.push(new NormalPlatform(this.context, x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT, -PLATFORM_SPEED));
                 this.isHeartPending = false;
             }
@@ -272,6 +288,8 @@ class Game {
         this.spawnTimer = 0;
         this.lastHeartScore = 0;
         this.isHeartPending = false;
+        this.isWaitingToSpawnBall = true;
+        this.gameSpeed = 1;
         this.normalObjects = [];
         this.spikedObjects = [];
         this.heartObjects = [];
