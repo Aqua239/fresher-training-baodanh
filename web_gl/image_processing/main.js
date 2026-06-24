@@ -38,7 +38,7 @@ async function main() {
     if(!gl) return alert ("No supporting WebGL");
 
     const vertSource = await loadShaderFile("./shaders/vertex.vert");
-    const fragSource = await loadShaderFile("./shaders/fragment_blur_hor.frag");
+    const fragSource = await loadShaderFile("./shaders/fragment_kernel.frag");
 
     const program = createProgram(gl,
         createShader(gl, gl.VERTEX_SHADER, vertSource),
@@ -51,6 +51,54 @@ async function main() {
     image.onload = function() {
         render(gl, program, image);
     }
+}
+
+const KERNELS = {
+    normal: [
+        0, 0, 0,
+        0, 1, 0,
+        0, 0, 0
+    ],
+    gaussianBlur: [
+        0.045, 0.122, 0.045,
+        0.122, 0.332, 0.122,
+        0.045, 0.122, 0.045
+    ],
+    unsharpen: [
+        -1, -1, -1,
+        -1,  9, -1,
+        -1, -1, -1
+    ],
+    emboss: [
+        -2, -1,  0,
+        -1,  1,  1,
+        0,  1,  2
+    ],
+
+    edgeDetectKernel: [
+     -1, -1, -1,
+     -1,  8, -1,
+     -1, -1, -1
+    ]
+};
+
+function applyKernel(gl, program, kernelName) {
+    let kernel = KERNELS[kernelName];
+    if (!kernel) kernel = KERNELS["normal"];
+
+    let kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
+    let kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
+
+    gl.uniform1fv(kernelLocation, kernel);
+    gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernel));
+}
+
+function computeKernelWeight(kernel) {
+    let weight = kernel.reduce(function(prev, curr) {
+        return prev + curr;
+    });
+
+    return weight <= 0 ? 1 : weight;
 }
 
 function render(gl, program, image) {
@@ -97,6 +145,8 @@ function render(gl, program, image) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+    applyKernel(gl, program, "edgeDetectKernel");
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
