@@ -38,7 +38,7 @@ async function main() {
     if(!gl) return alert ("No supporting WebGL");
 
     const vertSource = await loadShaderFile("./shaders/vertex.vert");
-    const fragSource = await loadShaderFile("./shaders/fragment.frag");
+    const fragSource = await loadShaderFile("./shaders/fragment_blur_hor.frag");
 
     const program = createProgram(gl,
         createShader(gl, gl.VERTEX_SHADER, vertSource),
@@ -63,8 +63,8 @@ function render(gl, program, image) {
     let positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    var x1 = 0, y1 = 0;
-    var x2 = x1 + image.width, y2 = y1 + image.height;
+    let x1 = 0, y1 = 0;
+    let x2 = x1 + image.width, y2 = y1 + image.height;
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
         x1, y1, x2, y1, x1, y2,
         x1, y2, x2, y1, x2, y2
@@ -73,8 +73,11 @@ function render(gl, program, image) {
     gl.enableVertexAttribArray(positionLoc);
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
-    var texCoordLoc = gl.getAttribLocation(program, "a_texCoord");
-    var texCoordBuffer = gl.createBuffer();
+    let textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
+    gl.uniform2f(textureSizeLocation, image.width, image.height);
+
+    let texCoordLoc = gl.getAttribLocation(program, "a_texCoord");
+    let texCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
