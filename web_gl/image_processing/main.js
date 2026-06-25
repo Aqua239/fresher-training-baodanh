@@ -104,8 +104,8 @@ function computeKernelWeight(kernel) {
 function render(gl, program, image) {
     gl.useProgram(program);
 
-    let resolutionLoc = gl.getUniformLocation(program, "u_resolution");
-    gl.uniform2f(resolutionLoc, gl.canvas.width, gl.canvas.height);
+    let resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 
     let positionLoc = gl.getAttribLocation(program, "a_position");
     let positionBuffer = gl.createBuffer();
@@ -136,6 +136,45 @@ function render(gl, program, image) {
     gl.enableVertexAttribArray(texCoordLoc);
     gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
 
+    let originalImageTexture = createAndSetupTexture(gl);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+    let textures = [];
+    let framebuffers = [];
+    for (let ii = 0; ii < 2; ++ii) {
+        let texture = createAndSetupTexture(gl);
+        textures.push(texture);
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        let fbo = gl.createFramebuffer();
+        framebuffers.push(fbo);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    }
+
+    let flipYLocation = gl.getUniformLocation(program, "u_flipY");
+    gl.uniform1f(flipYLocation, 1);
+
+    let effectsToApply = ["gaussianBlur", "emboss", "unsharpen"];
+
+    gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
+
+    for (let ii = 0; ii < effectsToApply.length; ++ii) {
+        setFramebuffer(gl, resolutionUniformLocation, framebuffers[ii % 2], image.width, image.height);
+        drawWithKernel(gl, program, effectsToApply[ii]);
+        gl.bindTexture(gl.TEXTURE_2D, textures[ii % 2]);
+    }
+    
+    gl.uniform1f(flipYLocation, -1);
+    gl.canvas.width = image.width;
+    gl.canvas.height = image.height;
+    setFramebuffer(gl, resolutionUniformLocation, null, gl.canvas.width, gl.canvas.height);
+
+    drawWithKernel(gl, program, "normal");
+}
+
+function createAndSetupTexture(gl) {
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -144,11 +183,17 @@ function render(gl, program, image) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-    applyKernel(gl, program, "edgeDetectKernel");
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    return texture;
 }
 
+function setFramebuffer(gl, resolutionUniformLocation, fbo, width, height) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.uniform2f(resolutionUniformLocation, width, height);
+    gl.viewport(0, 0, width, height);
+}
+
+function drawWithKernel(gl, program, name) {
+    applyKernel(gl, program, name);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
 main();
