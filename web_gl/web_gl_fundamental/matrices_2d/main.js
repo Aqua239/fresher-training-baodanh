@@ -5,6 +5,14 @@ let rotation = [0, 1];
 let angleInRadians = 0;
 let scale = [0.8,0.8];
 let m3 = {
+    projection: function(width, height) {
+        return [
+            2 / width, 0, 0,
+            0, -2 / height, 0,
+            -1, 1, 1
+        ];
+    },
+    
     identity: function() {
         return [
             1, 0, 0,
@@ -120,7 +128,6 @@ async function main() {
     )
     
     let positionLocation = gl.getAttribLocation(program, "a_position");
-    let resolutionLocation = gl.getUniformLocation(program, "u_resolution");
     let matrixLocation = gl.getUniformLocation(program, "u_matrix");
     let colorLocation = gl.getUniformLocation(program, "u_color");
 
@@ -175,20 +182,21 @@ async function main() {
         let stride = 0;
         let offset = 0;
         gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
-
-        gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
-        
+    
         gl.uniform4fv(colorLocation, color);
 
+        let projectionMatrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
         let translationMatrix = m3.translation(translation[0], translation[1]);
         let rotationMatrix = m3.rotation(angleInRadians);
         let scaleMatrix = m3.scaling(scale[0], scale[1]);
 
+        let moveOriginMatrix = m3.translation(-50, -75);
+
         let matrix = m3.identity();
-        matrix = m3.multiply(matrix, translationMatrix);
+        matrix = m3.multiply(projectionMatrix, translationMatrix);
         matrix = m3.multiply(matrix, rotationMatrix);
         matrix = m3.multiply(matrix, scaleMatrix);
-
+        matrix = m3.multiply(matrix, moveOriginMatrix);
         gl.uniformMatrix3fv(matrixLocation, false, matrix);
     
         let primitiveType = gl.TRIANGLES;
