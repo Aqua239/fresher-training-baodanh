@@ -64,6 +64,8 @@ async function main() {
 
     webglLessonsUI.setupSlider("#x", {slide: updatePosition(0), max: gl.canvas.width });
     webglLessonsUI.setupSlider("#y", {slide: updatePosition(1), max: gl.canvas.height});
+    webglLessonsUI.setupSlider("#angle", {slide: updateAngle, max: 360});
+    
     $("#rotation").gmanUnitCircle({
     width: 200,
     height: 200,
@@ -80,6 +82,14 @@ async function main() {
             translation[index] = ui.value;
             drawScene(gl, program, positionLocation, resolutionLocation, colorLocation, translationLocation, rotationLocation, positionBuffer);
         }
+    }
+
+    function updateAngle(event, ui) {
+        let angleInDegrees = 360 - ui.value;
+        let angleInRadians = angleInDegrees * Math.PI / 180;
+        rotation[0] = Math.sin(angleInRadians);
+        rotation[1] = Math.cos(angleInRadians);
+        drawScene(gl, program, positionLocation, resolutionLocation, colorLocation, translationLocation, rotationLocation, positionBuffer);
     }
 }
 
