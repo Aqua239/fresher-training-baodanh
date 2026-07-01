@@ -1,10 +1,18 @@
 "use strict";
-let translation = [100, 150];
+let translation = [100, 100];
 let color = [Math.random(), Math.random(), Math.random(), 1];
 let rotation = [0, 1];
 let angleInRadians = 0;
-let scale = [1,1];
+let scale = [0.8,0.8];
 let m3 = {
+    identity: function() {
+        return [
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1,
+        ];
+    },
+    
     translation: function(tx, ty) {
         return [
         1, 0, 0,
@@ -176,15 +184,61 @@ async function main() {
         let rotationMatrix = m3.rotation(angleInRadians);
         let scaleMatrix = m3.scaling(scale[0], scale[1]);
 
-        let matrix = m3.multiply(translationMatrix, rotationMatrix);
+        let matrix = m3.identity();
+        matrix = m3.multiply(matrix, translationMatrix);
+        matrix = m3.multiply(matrix, rotationMatrix);
         matrix = m3.multiply(matrix, scaleMatrix);
-        
+
         gl.uniformMatrix3fv(matrixLocation, false, matrix);
-        
+    
         let primitiveType = gl.TRIANGLES;
         offset = 0;
         let count = 18;
         gl.drawArrays(primitiveType, offset, count);
+    }
+
+    function draw5F() {
+        webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        
+        gl.useProgram(program);
+
+        gl.enableVertexAttribArray(positionLocation);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        let size = 2;
+        let type = gl.FLOAT;
+        let normalize = false;
+        let stride = 0;
+        let offset = 0;
+        gl.vertexAttribPointer(positionLocation, size, type, normalize, stride, offset);
+
+        gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+        
+        gl.uniform4fv(colorLocation, color);
+
+        let translationMatrix = m3.translation(translation[0], translation[1]);
+        let rotationMatrix = m3.rotation(angleInRadians);
+        let scaleMatrix = m3.scaling(scale[0], scale[1]);
+
+        let matrix = m3.identity();
+
+        for (let ii = 0; ii < 5; ii++) {
+            matrix = m3.multiply(matrix, translationMatrix);
+            matrix = m3.multiply(matrix, rotationMatrix);
+            matrix = m3.multiply(matrix, scaleMatrix);
+    
+            gl.uniformMatrix3fv(matrixLocation, false, matrix);
+        
+            let primitiveType = gl.TRIANGLES;
+            offset = 0;
+            let count = 18;
+            gl.drawArrays(primitiveType, offset, count);
+        }
     }
 }
 
